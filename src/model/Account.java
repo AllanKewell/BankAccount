@@ -20,8 +20,8 @@ public class Account implements Serializable {
 	private String iban;
 	private String bic;
 	private Date creationDate;
-	private int balance;
-	private int limitBalance;
+	private Integer balance;
+	private Integer limitBalance;
 
 	public Account(String bank, String accountNumber, String iban, 
 			String bic, Date creationDate, int balance, int limitBalance) {
@@ -93,14 +93,14 @@ public class Account implements Serializable {
 	/**
 	 * @return the balance
 	 */
-	public int getBalance() {
+	public Integer getBalance() {
 		return balance;
 	}
 
 	/**
 	 * @param balance the balance to set
 	 */
-	public void setBalance(int balance) {
+	public void setBalance(Integer balance) {
 		this.balance = balance;
 	}
 
@@ -121,14 +121,14 @@ public class Account implements Serializable {
 	/**
 	 * @return the limiteBalance
 	 */
-	public int getLimitBalance() {
+	public Integer getLimitBalance() {
 		return limitBalance;
 	}
 
 	/**
 	 * @param limiteBalance the limiteBalance to set
 	 */
-	public void setLimitBalance(int limitBalance) {
+	public void setLimitBalance(Integer limitBalance) {
 		this.limitBalance = limitBalance;
 	}
 }
