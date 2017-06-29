@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import data.MapData;
+import exceptions.UnacceptableAccountOperationException;
 import function.BankAccountFunctions;
 import model.Account;
 import model.User;
@@ -30,10 +31,11 @@ public class BankAccountFunctionalities implements BankAccountFunctions {
 	}
 
 	@Override
-	public void deleteUser(User user) {
+	public User deleteUser(User user) {
 		if(baMap.containsKey(user))
 			baMap.remove(user);
-		
+
+		return null;
 	}
 
 	@Override
@@ -55,19 +57,31 @@ public class BankAccountFunctionalities implements BankAccountFunctions {
 		if(phoneNumber != null)
 			updatedUser.setPhoneNumber(phoneNumber);
 
+		if(baMap.containsKey(user)) {
+			baMap.remove(user);
+			baMap.put(updatedUser, updatedUser.getAccountList());
+		}
+
 		return updatedUser;
 	}
 
 	@Override
-	public void readUser(User user) {
-		System.out.println("Prénom : " + user.getFirstName());
-		System.out.println("Nom : " + user.getLastName());
-		System.out.println("Age : " + user.getAge());
-		System.out.println("adresse : " + user.getAdress());
-		System.out.println("Code postal : " + user.getZipCode());
-		System.out.println("Ville : " + user.getTown());
-		System.out.println("Pays : " + user.getCountry());
-		System.out.println("Numéro téléphone : " + user.getPhoneNumber());
+	public void readUsers() {
+
+		for (Map.Entry<User, List<Account>> entry : baMap.entrySet()) {
+
+			User user = entry.getKey();
+
+			System.out.println("Prénom : " + user.getFirstName());
+			System.out.println("Nom : " + user.getLastName());
+			System.out.println("Age : " + user.getAge());
+			System.out.println("adresse : " + user.getAdress());
+			System.out.println("Code postal : " + user.getZipCode());
+			System.out.println("Ville : " + user.getTown());
+			System.out.println("Pays : " + user.getCountry());
+			System.out.println("Numéro téléphone : " + user.getPhoneNumber());
+			System.out.println("");
+		}
 	}
 
 	@Override
@@ -90,9 +104,21 @@ public class BankAccountFunctionalities implements BankAccountFunctions {
 
 	@Override
 	public Account addAccount(User user, String bank, String accountNumber, String iban, String bic, Date creationDate,
-			Integer balance, Integer limitBalance) {
+			Integer balance, Integer limitBalance) throws UnacceptableAccountOperationException {
 
 		Account newAccount = new Account(bank, accountNumber, iban, bic, creationDate, balance, limitBalance);
+
+		for (Map.Entry<User, List<Account>> entry : baMap.entrySet()) {
+			List<Account> accounts = entry.getValue();
+
+			for(Account account : accounts) {
+				if(account.getAccountNumber().equals(accountNumber) || account.getIban().equals(iban) || account.getBic().equals(bic)) {
+					throw new UnacceptableAccountOperationException("Création impossible ! Un compte "
+							+ "existe déjà avec une des informations suivantes : n° de compte, IBAN, BIC");
+				}
+			}
+		}
+
 		newAccount = linkAccount(newAccount, user);
 
 		return newAccount;
@@ -105,44 +131,104 @@ public class BankAccountFunctionalities implements BankAccountFunctions {
 	}
 
 	@Override
-	public void deleteAccount(Account account) {
-		// TODO Auto-generated method stub
-		
-	}
+	public Account deleteAccount(Account account) {
 
-	@Override
-	public Account updateAccount(Account account, Integer balance, Integer limitBalance) {
-		// TODO Auto-generated method stub
+		for (Map.Entry<User, List<Account>> entry : baMap.entrySet()) {
+			User currentUser = entry.getKey();
+			List<Account> accounts = entry.getValue();
+
+			for(int i = 0; i < accounts.size(); i++) {
+				if(accounts.get(i).getAccountNumber().equals(account.getAccountNumber()))
+					accounts.remove(account);
+			}
+
+			if(!accounts.equals(currentUser.getAccountList())) {
+				currentUser.setAccountList(accounts);
+				baMap.replace(currentUser, currentUser.getAccountList());
+				break;
+			}
+		}
 		return null;
 	}
 
 	@Override
-	public void readAccount(Account account) {
-		System.out.println("Banque : " + account.getBank());
-		System.out.println("N° de compte : " + account.getAccountNumber());
-		System.out.println("IBAN : " + account.getIban());
-		System.out.println("BIC : " + account.getBic());
-		System.out.println("Date de création : " + account.getCreationDate());
-		System.out.println("Solde : " + account.getBalance());
-		System.out.println("Plafond : " + account.getLimitBalance());
+	public Account updateAccount(Account account, Integer balance, Integer limitBalance) {
+
+		Account updatedAccount = account;
+		
+		if(balance != null)
+			updatedAccount.setBalance(balance);
+		if(limitBalance != null)
+			updatedAccount.setLimitBalance(limitBalance);
+		
+		for (Map.Entry<User, List<Account>> entry : baMap.entrySet()) {
+			
+			User currentUser = entry.getKey();
+			List<Account> accounts = entry.getValue();
+
+			for(int i = 0; i < accounts.size(); i++) {
+				if(accounts.get(i).getAccountNumber().equals(updatedAccount.getAccountNumber()))
+					accounts.set(i, updatedAccount);
+			}
+
+			if(!accounts.equals(currentUser.getAccountList())) {
+				currentUser.setAccountList(accounts);
+				baMap.replace(currentUser, currentUser.getAccountList());
+				break;
+			}
+			
+		}
+		
+		return null;
 	}
 
 	@Override
-	public void withdraw(Account account, Integer money) {
-		if(money < 0) {
-			System.out.println("Opération impossible ! Vous devez rentrer une valeur positive.");
+	public void readAccounts() {
+
+		for (Map.Entry<User, List<Account>> entry : baMap.entrySet()) {
+
+			List<Account> accounts = entry.getValue();
+
+			for(Account account : accounts) {
+				System.out.println("Banque : " + account.getBank());
+				System.out.println("N° de compte : " + account.getAccountNumber());
+				System.out.println("IBAN : " + account.getIban());
+				System.out.println("BIC : " + account.getBic());
+				System.out.println("Date de création : " + account.getCreationDate());
+				System.out.println("Solde : " + account.getBalance());
+				System.out.println("Plafond : " + account.getLimitBalance());
+				System.out.println("");
+			}
 		}
+	}
+
+	@Override
+	public void withdraw(Account account, Integer money) throws UnacceptableAccountOperationException {
 		
+		// Si le montant du retrait est négatif ou 0
+		if(money <= 0) {
+			throw new UnacceptableAccountOperationException("Opération impossible ! Vous devez rentrer une valeur positive et supérieur à 0.");
+		}
+
 		Integer newBalance = account.getBalance() - money;
 		
-		if(account.getBalance() < account.getLimitBalance()) {
-			System.out.println("Retrait impossible. Vous avez déjà dépassé votre plafond.");
+		// Si le nouveau solde est inférieur au plafond du compte
+		if(newBalance < account.getLimitBalance()) {
+			throw new UnacceptableAccountOperationException("Retrait impossible. Vous dépassé votre plafond.");
 		}
+
+		account.setBalance(newBalance);
 		
 	}
 
 	@Override
-	public void deposit(Account account, Integer money) {
+	public void deposit(Account account, Integer money) throws UnacceptableAccountOperationException {
+
+		// Si le montant du retrait est négatif ou 0
+		if(money <= 0) {
+			throw new UnacceptableAccountOperationException("Opération impossible ! Vous devez rentrer une valeur positive et supérieur à 0.");
+		}
+
 		account.setBalance(account.getBalance() + money);
 	}
 
@@ -168,7 +254,7 @@ public class BankAccountFunctionalities implements BankAccountFunctions {
 	/**
 	 * 
 	 */
-	public void saveMap() {
+	public void saveBankAccountMap() {
 		mapData.setBankAccountMap(baMap);
 	}
 
