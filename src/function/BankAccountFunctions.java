@@ -15,9 +15,9 @@ public interface BankAccountFunctions {
 			String town, String country, String phoneNumber);
 	public void readUsers();
 	public void accountsList(User user);
-	public Account addAccount(User user, String bank, String accountNumber, String iban, 
+	public Account addAccount(String bank, String accountNumber, String iban, 
 			String bic, Date creationDate, Integer balance, Integer limitBalance) throws UnacceptableAccountOperationException;
-	public Account linkAccount(Account account, User user);
+	public User linkAccount(Account account, User user);
 	public Account deleteAccount(Account account);
 	public Account updateAccount(Account account, Integer balance, Integer limitBalance);
 	public void readAccounts();

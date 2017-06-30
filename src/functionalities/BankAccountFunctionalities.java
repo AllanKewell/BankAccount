@@ -34,6 +34,8 @@ public class BankAccountFunctionalities implements BankAccountFunctions {
 				throw new UnacceptableAccountOperationException("Création impossible. Un utilisateur existe déjà avec ces données.");
 		}
 
+		this.addBankAccountEntryMap(newUser);
+
 		return newUser;
 	}
 
@@ -110,7 +112,7 @@ public class BankAccountFunctionalities implements BankAccountFunctions {
 	}
 
 	@Override
-	public Account addAccount(User user, String bank, String accountNumber, String iban, String bic, Date creationDate,
+	public Account addAccount(String bank, String accountNumber, String iban, String bic, Date creationDate,
 			Integer balance, Integer limitBalance) throws UnacceptableAccountOperationException {
 
 		Account newAccount = new Account(bank, accountNumber, iban, bic, creationDate, balance, limitBalance);
@@ -126,15 +128,14 @@ public class BankAccountFunctionalities implements BankAccountFunctions {
 			}
 		}
 
-		newAccount = linkAccount(newAccount, user);
-
 		return newAccount;
 	}
 
 	@Override
-	public Account linkAccount(Account account, User user) {
+	public User linkAccount(Account account, User user) {
 		user.getAccountList().add(account);
-		return account;
+		this.addBankAccountEntryMap(user);
+		return user;
 	}
 
 	@Override
@@ -202,8 +203,8 @@ public class BankAccountFunctionalities implements BankAccountFunctions {
 				System.out.println("IBAN : " + account.getIban());
 				System.out.println("BIC : " + account.getBic());
 				System.out.println("Date de création : " + account.getCreationDate());
-				System.out.println("Solde : " + account.getBalance());
-				System.out.println("Plafond : " + account.getLimitBalance());
+				System.out.println("Solde : " + account.getBalance() + "€");
+				System.out.println("Plafond : " + account.getLimitBalance() + "€");
 				System.out.println("");
 			}
 		}
@@ -224,7 +225,7 @@ public class BankAccountFunctionalities implements BankAccountFunctions {
 			throw new UnacceptableAccountOperationException("Retrait impossible. Vous dépassé votre plafond.");
 		}
 
-		account.setBalance(newBalance);
+		this.updateAccount(account, newBalance, null);
 		
 	}
 
@@ -236,15 +237,17 @@ public class BankAccountFunctionalities implements BankAccountFunctions {
 			throw new UnacceptableAccountOperationException("Opération impossible ! Vous devez rentrer une valeur positive et supérieur à 0.");
 		}
 
-		account.setBalance(account.getBalance() + money);
+		this.updateAccount(account, account.getBalance() + money, null);
 	}
 
 	@Override
 	public Integer balancesSum(User user) {
 		Integer sumBalance = 0;
-		
-		for(Account account : user.getAccountList()) {
-			sumBalance += account.getBalance();
+
+		if(user.getAccountList() != null && !user.getAccountList().isEmpty()) {
+			for(Account account : user.getAccountList()) {
+				sumBalance += account.getBalance();
+			}
 		}
 
 		return sumBalance;
@@ -255,7 +258,11 @@ public class BankAccountFunctionalities implements BankAccountFunctions {
 	 * @param user
 	 */
 	public void addBankAccountEntryMap(User user) {
-		baMap.put(user, user.getAccountList());
+		if(!baMap.containsKey(user)) {
+			baMap.put(user, user.getAccountList());
+		} else {
+			baMap.replace(user, user.getAccountList());
+		}
 	}
 
 	/**
