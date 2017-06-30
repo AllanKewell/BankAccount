@@ -23,10 +23,17 @@ public class BankAccountFunctionalities implements BankAccountFunctions {
 
 	@Override
 	public User addUser(String firstName, String lastName, Integer age, String adress, String zipCode, String town,
-			String country, String phoneNumber) {
+			String country, String phoneNumber) throws UnacceptableAccountOperationException {
 
 		User newUser = new User(firstName, lastName, age, adress, zipCode, town, country, phoneNumber);
-		
+
+		for (Map.Entry<User, List<Account>> entry : baMap.entrySet()) {
+			User currentUser = entry.getKey();
+
+			if(currentUser.equals(newUser))
+				throw new UnacceptableAccountOperationException("Création impossible. Un utilisateur existe déjà avec ces données.");
+		}
+
 		return newUser;
 	}
 

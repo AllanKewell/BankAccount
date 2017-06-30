@@ -9,7 +9,7 @@ import model.User;
 public interface BankAccountFunctions {
 
 	public User addUser(String firstName, String lastName, Integer age, String adress, String zipCode,
-			String town, String country, String phoneNumber);
+			String town, String country, String phoneNumber) throws UnacceptableAccountOperationException;
 	public User deleteUser(User user);
 	public User updateUser(User user, Integer age, String adress, String zipCode,
 			String town, String country, String phoneNumber);
